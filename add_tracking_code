@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<modification>
+	<id>Tracking Code</id>
+	<version>1.0.0</version>
+	<vqmver>2.5.0</vqmver>
+	<author>Saurav</author>
+
+	<file name="catalog/controller/checkout/success.php">
+		<operation error="log">
+			<search position="after"><![CDATA[
+			unset($this->session->data['totals']);
+			]]></search>
+			<add><![CDATA[
+			unset($this->session->data['tracking_sub_amount']);
+			]]></add>
+		</operation>
+		<operation error="log">
+			<search position="before"><![CDATA[
+				$this->cart->clear();
+				]]></search>
+			<add><![CDATA[
+			/*edited for tracking order*/
+			$data['merchant_order_id'] = $this->session->data['order_id'];
+			$data['merchant_sub_amount'] = $this->session->data['tracking_sub_amount'];
+			/*end tracking code*/
+			]]></add>
+		</operation>
+	</file>
+	<file name="catalog/controller/checkout/confirm.php">
+		<operation error="log">
+			<search position="after"><![CDATA[
+				$data['payment'] = $this->load->controller('payment/' . $this->session->data['payment_method']['code']);
+				]]></search>
+			<add><![CDATA[
+			/*edited for tracking record*/
+
+echo "<pre>";
+			print_r($data['totals']);
+echo "</pre>";
+				$this->session->data['tracking_sub_amount'] = $data['totals'][0]['text'];
+			/*end  tracking code*/
+			]]></add>
+		</operation>
+	</file>
+	<file name="catalog/view/theme/default/template/common/success.tpl">
+		<operation error="log">
+			<search position="after"><![CDATA[
+				<?php echo $text_message;?>
+				]]></search>
+			<add><![CDATA[
+			<!--edited for tracking record-->
+				<?php
+      if(isset($merchant_sub_amount)){
+        $merchant_tracking_amount = $merchant_sub_amount;}
+        else{
+          $merchant_tracking_amount = "null";}
+          if(isset($merchant_order_id)) {
+            $merchant_tracking_order_id = $merchant_order_id;}
+            else{
+                $merchant_tracking_order_id = "null";
+              }?>
+      <img src="https://www.clixGalore.com/AdvTransaction.aspx?AdID=56789&SV=<?php echo $merchant_tracking_amount;?>&OID=<?php echo $merchant_tracking_order_id;?>" height="0" width="0" border="0">
+			<!--end  tracking code-->
+			]]></add>
+		</operation>
+	</file>
+</modification>
